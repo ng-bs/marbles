@@ -3,8 +3,9 @@ import { Person } from './sw.models';
 import { cold } from 'jasmine-marbles';
 import { TestScheduler } from 'rxjs/testing';
 import { throttleTime } from 'rxjs/operators';
+import { NEVER } from 'rxjs';
 
-fdescribe('DataService', () => {
+describe('DataService', () => {
   let mockPeople;
   beforeEach(() => {
     mockPeople = [
@@ -34,38 +35,24 @@ fdescribe('DataService', () => {
       const expected = cold('(a|)', { a: [] });
       expect(actual).toBeObservable(expected);
     });
-    fit('should fail if the http call takes too long', () => {
-      // const httpCall = cold('2000ms', { a: { results: mockPeople } });
-      // mockHttp.get.and.returnValue(httpCall);
-      // const actual = dataService.getPeople();
-      // const expected = cold('-#');
-      // expect(actual).toBeObservable(expected);
+    it('should fail if the http call takes too long', () => {
       const testScheduler = new TestScheduler((a, e) => {
-        // asserting the two objects are equal
-        // e.g. using chai.
         expect(a).toEqual(e);
       });
       testScheduler.run(helpers => {
-
         const { expectObservable } = helpers;
-        const httpCall = helpers.cold('2000ms');
+        const httpCall = NEVER;
         mockHttp.get.and.returnValue(httpCall);
         const actual = dataService.getPeople();
-        // const expected = cold('1000ms (a|)', { a: [] });
-        // expect(actual).toBeObservable(expected);
-        expectObservable(actual
-          .pipe(throttleTime(1, testScheduler)))
-          .toBe('(a|)', { a: [] });
+        expectObservable(actual).toBe('1s (a|)', { a: [] });
       });
     });
-    it('should fail if the http call takes too long 2', () => {
-      const httpCall = cold('2000ms |');
+    it('should fail if the http call takes too long via subscribe', () => {
+      const httpCall = NEVER;
       mockHttp.get.and.returnValue(httpCall);
       dataService.getPeople().subscribe(people => {
         expect(people).toEqual([]);
       });
-      // const expected = cold('1000ms -(a|)', { a: [] });
-      // expect(actual).toBeObservable(expected);
     });
   });
 });
